@@ -43,11 +43,11 @@ def get_certificate_info(ip: str, port: int = 443) -> Optional[Tuple[str, List[s
         return None
 
 
-def scan_ips(ips: List[str], out_f, max_workers: int=100):
+def scan_ips(ips: List[str], writer, max_workers: int=100):
     """
     Scan a list of IPs concurrently and output domain information.
     """
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(get_certificate_info, ip): ip for ip in ips}
         
         for future in concurrent.futures.as_completed(futures):
@@ -59,7 +59,7 @@ def scan_ips(ips: List[str], out_f, max_workers: int=100):
                     print(f"IP: {ip}")
                     print(f"Domain: {common_name}")
                     print(f"Alternative Domains: {alternative_domains}")
-                    out_f.writerow([ip, common_name, ';'.join(alternative_domains)])
+                    writer.writerow([ip, common_name, ';'.join(alternative_domains)])
             except Exception as e:
                 print(f"Error processing IP {ip}: {e}")
 
@@ -74,7 +74,7 @@ with open(input_file) as f, open('result.csv', 'w') as out_f:
     for line in f:
         ips_to_check.append(line.strip())
         if len(ips_to_check) >= 100_000:
-            scan_ips(ips_to_check, out_f, max_workers=workers)
+            scan_ips(ips_to_check, writer, max_workers=workers)
             ips_to_check = []
 
     if ips_to_check:
