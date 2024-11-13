@@ -75,4 +75,8 @@ with open(input_file) as f, open('result.csv', 'w') as out_f:
         ips_to_check.append(line.strip())
         if len(ips_to_check) >= 100_000:
             scan_ips(ips_to_check, out_f, max_workers=workers)
+            ips_to_check = []
+
+    if ips_to_check:
+        scan_ips(ips_to_check, out_f, max_workers=workers)
             
